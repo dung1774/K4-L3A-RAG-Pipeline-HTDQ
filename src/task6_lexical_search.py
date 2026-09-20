@@ -20,6 +20,18 @@ class BM25WithPositiveIDF(BM25Okapi):
             self.idf[word] = math.log(1 + (self.corpus_size - freq + 0.5) / (freq + 0.5))
 
 
+def get_corpus() -> list[dict]:
+    """Lấy corpus từ biến toàn cục hoặc tự động nạp từ Task 4."""
+    global CORPUS
+    if not CORPUS:
+        try:
+            from .task4_chunking_indexing import chunk_documents, load_documents
+            CORPUS = chunk_documents(load_documents())
+        except Exception:
+            pass
+    return CORPUS
+
+
 def build_bm25_index(corpus: list[dict]):
     """Tạo BM25 index từ corpus chunks."""
     tokenized = [item["content"].lower().split() for item in corpus]
@@ -28,10 +40,11 @@ def build_bm25_index(corpus: list[dict]):
 
 def lexical_search(query: str, top_k: int = 10) -> list[dict]:
     """Trả về BM25 SearchResult theo score giảm dần."""
-    if not CORPUS:
+    corpus = CORPUS if CORPUS else get_corpus()
+    if not corpus:
         return []
 
-    bm25 = build_bm25_index(CORPUS)
+    bm25 = build_bm25_index(corpus)
     query_tokens = query.lower().split()
     scores = bm25.get_scores(query_tokens)
 
