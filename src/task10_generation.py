@@ -11,6 +11,7 @@ Hướng dẫn:
 Nếu context không đủ hoặc provider lỗi, trả safe refusal; không bịa thông tin.
 """
 
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -20,9 +21,16 @@ from .task9_retrieval_pipeline import retrieve
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 TOP_K = 5
 TOP_P = 0.9
 TEMPERATURE = 0.3
+
+# Ngưỡng score tối thiểu để coi context là "đủ bằng chứng". Nếu chunk tốt nhất
+# không đạt ngưỡng này, coi như không đủ evidence và trả safe refusal thay vì
+# đẩy context yếu vào LLM và trông chờ prompt tự chối.
+MIN_RELEVANCE_SCORE = 0.2
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
 LLM_MODEL = os.getenv("LLM_MODEL", "")
@@ -30,67 +38,173 @@ LLM_MODEL = os.getenv("LLM_MODEL", "")
 SYSTEM_PROMPT = """Trả lời chỉ từ context được cung cấp.
 Mỗi khẳng định phải có citation. Nếu thiếu evidence, hãy từ chối xác minh."""
 
+SAFE_REFUSAL = "Tôi không thể xác minh thông tin này từ nguồn hiện có."
+
+
+def _safe_refusal_result() -> dict:
+    """Kết quả từ chối chuẩn hoá, dùng ở mọi nhánh lỗi/không đủ evidence."""
+    return {
+        "answer": SAFE_REFUSAL,
+        "sources": [],
+        "retrieval_source": "none",
+    }
+
 
 def reorder_for_llm(chunks: list[dict]) -> list[dict]:
-    """Đưa chunks quan trọng về đầu và cuối context."""
-    # TODO: Implement document reordering.
-    #
-    # if len(chunks) <= 2:
-    #     return list(chunks)
-    # front = chunks[::2]
-    # back = chunks[1::2]
-    # return front + back[::-1]
-    raise NotImplementedError("Implement reorder_for_llm")
+    """Đưa chunks quan trọng về đầu và cuối context.
+
+    Không mutate list/dict đầu vào — chỉ trả về list mới với cùng tham chiếu
+    tới các dict chunk gốc, thứ tự bị thay đổi để giảm lost-in-the-middle.
+    """
+    if len(chunks) <= 2:
+        return list(chunks)
+    front = chunks[::2]
+    back = chunks[1::2]
+    return front + back[::-1]
 
 
 def format_context(chunks: list[dict]) -> str:
-    """Tạo context có title và source label."""
-    # TODO: Format chunks để LLM tạo citation kiểm chứng được.
-    #
-    # parts = []
-    # for index, chunk in enumerate(chunks, 1):
-    #     metadata = chunk["metadata"]
-    #     parts.append(
-    #         f"[Document {index} | Title: {metadata['title']} | "
-    #         f"Source: {metadata['source']}]\n{chunk['content']}"
-    #     )
-    # return "\n\n---\n\n".join(parts)
-    raise NotImplementedError("Implement format_context")
+    """Tạo context có title và source label.
+
+    Dùng .get() với fallback để một chunk thiếu metadata (ví dụ đến từ
+    fallback PageIndex với schema khác) không làm crash toàn bộ pipeline.
+    """
+    parts = []
+    for index, chunk in enumerate(chunks, 1):
+        metadata = chunk.get("metadata", {}) or {}
+        title = metadata.get("title", "Không rõ tiêu đề")
+        source = metadata.get("source", "Không rõ nguồn")
+        content = chunk.get("content", "")
+        parts.append(
+            f"[Document {index} | Title: {title} | "
+            f"Source: {source}]\n{content}"
+        )
+    return "\n\n---\n\n".join(parts)
+
+
+def _extract_anthropic_text(response) -> str:
+    """Lấy text block đầu tiên, không giả định content[0] luôn là text."""
+    for block in response.content:
+        if getattr(block, "type", None) == "text":
+            return block.text
+    raise ValueError("Anthropic response không chứa text block nào.")
 
 
 def call_llm(system_prompt: str, user_message: str) -> str:
-    """Gọi OpenAI, Gemini hoặc Anthropic theo cấu hình."""
-    # TODO: Dispatch theo LLM_PROVIDER.
-    #
-    # - openai    -> OPENAI_API_KEY
-    # - gemini    -> GEMINI_API_KEY
-    # - anthropic -> ANTHROPIC_API_KEY
-    #
-    # Dùng LLM_MODEL và trả về text thuần cho cả ba nhánh.
-    raise NotImplementedError("Implement call_llm")
+    """Gọi OpenAI, Gemini hoặc Anthropic theo cấu hình.
+
+    Ném exception khi provider lỗi (auth, quota, network, response rỗng...).
+    Caller (generate_with_citation) chịu trách nhiệm bắt lỗi và trả safe
+    refusal — hàm này không tự nuốt lỗi để tránh che giấu nguyên nhân khi debug.
+    """
+    if LLM_PROVIDER == "openai":
+        from openai import OpenAI
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        response = client.chat.completions.create(
+            model=LLM_MODEL or "gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+        )
+        content = response.choices[0].message.content
+        if not content:
+            raise ValueError("OpenAI trả về nội dung rỗng.")
+        return content
+
+    elif LLM_PROVIDER == "gemini":
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model=LLM_MODEL or "gemini-2.5-flash",
+            contents=user_message,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=TEMPERATURE,
+                top_p=TOP_P,
+            )
+        )
+        text = response.text
+        if not text:
+            # Có thể bị safety filter chặn hoặc finish_reason khác STOP.
+            raise ValueError("Gemini trả về nội dung rỗng (có thể bị chặn bởi safety filter).")
+        return text
+
+    elif LLM_PROVIDER == "anthropic":
+        from anthropic import Anthropic
+        client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        response = client.messages.create(
+            model=LLM_MODEL or "claude-3-5-sonnet-latest",
+            system=system_prompt,
+            messages=[
+                {"role": "user", "content": user_message}
+            ],
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+            max_tokens=1024,
+        )
+        text = _extract_anthropic_text(response)
+        if not text:
+            raise ValueError("Anthropic trả về nội dung rỗng.")
+        return text
+
+    else:
+        raise ValueError(f"Unsupported LLM_PROVIDER: {LLM_PROVIDER}")
+
+
+def _has_sufficient_evidence(chunks: list[dict]) -> bool:
+    """Kiểm tra context có đủ bằng chứng hay không dựa trên score cao nhất.
+
+    Nếu chunk không có field 'score', coi như không xác định được độ liên
+    quan và bảo thủ chấp nhận (giữ hành vi cũ) — nhưng nếu có score, áp
+    ngưỡng MIN_RELEVANCE_SCORE để tránh đẩy context không liên quan vào LLM.
+    """
+    scores = [c["score"] for c in chunks if isinstance(c.get("score"), (int, float))]
+    if not scores:
+        return True
+    return max(scores) >= MIN_RELEVANCE_SCORE
 
 
 def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
-    """Trả về GenerationResult."""
-    # TODO: Implement end-to-end generation.
-    #
-    # chunks = retrieve(query, top_k=top_k)
-    # if not chunks:
-    #     return {
-    #         "answer": "Tôi không thể xác minh thông tin này từ nguồn hiện có.",
-    #         "sources": [],
-    #         "retrieval_source": "none",
-    #     }
-    # reordered = reorder_for_llm(chunks)
-    # context = format_context(reordered)
-    # user_message = f"Context:\n{context}\n\nQuestion: {query}"
-    # answer = call_llm(SYSTEM_PROMPT, user_message)
-    # return {
-    #     "answer": answer,
-    #     "sources": chunks,
-    #     "retrieval_source": chunks[0]["retrieval_method"],
-    # }
-    raise NotImplementedError("Implement generate_with_citation")
+    """Trả về GenerationResult.
+
+    Ba nhánh dẫn đến safe refusal (answer cố định, sources=[],
+    retrieval_source="none"):
+      1. Không retrieve được chunk nào.
+      2. Chunk tốt nhất không đạt ngưỡng liên quan tối thiểu.
+      3. Gọi LLM thất bại (lỗi provider/network/response rỗng).
+    """
+    try:
+        chunks = retrieve(query, top_k=top_k)
+    except Exception:
+        logger.exception("Retrieval pipeline thất bại cho query=%r", query)
+        return _safe_refusal_result()
+
+    if not chunks:
+        return _safe_refusal_result()
+
+    if not _has_sufficient_evidence(chunks):
+        logger.info("Không đủ evidence cho query=%r (score dưới ngưỡng).", query)
+        return _safe_refusal_result()
+
+    reordered = reorder_for_llm(chunks)
+    context = format_context(reordered)
+    user_message = f"Context:\n{context}\n\nQuestion: {query}"
+
+    try:
+        answer = call_llm(SYSTEM_PROMPT, user_message)
+    except Exception:
+        logger.exception("LLM provider (%s) lỗi cho query=%r", LLM_PROVIDER, query)
+        return _safe_refusal_result()
+
+    return {
+        "answer": answer,
+        "sources": chunks,
+        "retrieval_source": chunks[0].get("retrieval_method", "unknown"),
+    }
 
 
 if __name__ == "__main__":
