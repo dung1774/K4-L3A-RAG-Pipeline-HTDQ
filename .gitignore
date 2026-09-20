@@ -55,3 +55,6 @@ pageindex_pdfs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated vector database
+chroma_db/

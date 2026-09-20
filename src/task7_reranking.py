@@ -16,26 +16,28 @@ def rerank_rrf(
     k: int = 60,
 ) -> list[dict]:
     """Fuse nhiều ranked lists và trả hybrid SearchResult."""
-    # TODO: Implement RRF.
-    #
-    # scores = {}
-    # items = {}
-    # for ranked_list in ranked_lists:
-    #     for rank, item in enumerate(ranked_list, 1):
-    #         item_id = item["id"]
-    #         scores[item_id] = scores.get(item_id, 0.0) + 1 / (k + rank)
-    #         items[item_id] = item
-    #
-    # ranked_ids = sorted(scores, key=scores.get, reverse=True)
-    # results = []
-    # for item_id in ranked_ids[:top_k]:
-    #     result = items[item_id].copy()
-    #     result["score"] = scores[item_id]
-    #     result["retrieval_method"] = "hybrid"
-    #     results.append(result)
-    # return results
-    raise NotImplementedError("Implement rerank_rrf")
+    rrf_scores: dict[str, float] = {}
+    items_map: dict[str, dict] = {}
+
+    for r_list in ranked_lists:
+        for rank, item in enumerate(r_list, start=1):
+            item_id = item["id"]
+            rrf_scores[item_id] = rrf_scores.get(item_id, 0.0) + (1.0 / (k + rank))
+            if item_id not in items_map:
+                items_map[item_id] = item
+
+    # Sắp xếp các item_id theo điểm RRF giảm dần
+    sorted_ids = sorted(rrf_scores.keys(), key=lambda x: rrf_scores[x], reverse=True)
+
+    results = []
+    for item_id in sorted_ids[:top_k]:
+        res = items_map[item_id].copy()
+        res["score"] = rrf_scores[item_id]
+        res["retrieval_method"] = "hybrid"
+        results.append(res)
+
+    return results
 
 
 if __name__ == "__main__":
-    print("Implement rerank_rrf, then run contract tests.")
+    print("RRF module ready.")

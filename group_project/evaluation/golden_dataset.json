@@ -1,0 +1,77 @@
+[
+  {
+    "question": "Học phí của sinh viên đại học chính quy được tính theo học tín chỉ hay học kỳ?",
+    "expected_answer": "Học phí của sinh viên đại học chính quy được tính theo tín chỉ. Mỗi tín chỉ có mức thu cụ thể theo quy định của từng trường và năm học.",
+    "expected_context": "Học phí được thu theo tín chỉ đăng ký học trong học kỳ. Sinh viên đóng học phí dựa trên số tín chỉ thực tế đăng ký mỗi học kỳ."
+  },
+  {
+    "question": "Sinh viên có thể nộp học phí theo những hình thức nào?",
+    "expected_answer": "Sinh viên có thể nộp học phí qua chuyển khoản ngân hàng, nộp trực tiếp tại phòng kế toán, hoặc qua các cổng thanh toán điện tử được nhà trường chỉ định.",
+    "expected_context": "Nhà trường chấp nhận nộp học phí qua hình thức chuyển khoản ngân hàng, nộp tiền mặt tại quầy kế toán, hoặc thanh toán trực tuyến qua cổng thanh toán điện tử."
+  },
+  {
+    "question": "Sinh viên được miễn giảm học phí trong những trường hợp nào?",
+    "expected_answer": "Sinh viên được miễn hoặc giảm học phí trong các trường hợp như: thuộc hộ nghèo, hộ cận nghèo, là con của thương binh liệt sĩ, có hoàn cảnh đặc biệt khó khăn được UBND xác nhận.",
+    "expected_context": "Các đối tượng được miễn giảm học phí bao gồm sinh viên thuộc hộ nghèo, hộ cận nghèo, con của người có công với cách mạng, và sinh viên có hoàn cảnh đặc biệt khó khăn."
+  },
+  {
+    "question": "Học bổng khuyến khích học tập được xét theo tiêu chí nào?",
+    "expected_answer": "Học bổng khuyến khích học tập được xét dựa trên kết quả học tập (GPA) và kết quả rèn luyện của sinh viên trong học kỳ vừa qua, theo thứ tự từ cao xuống thấp.",
+    "expected_context": "Học bổng khuyến khích học tập xét theo điểm trung bình học tập (GPA) và điểm rèn luyện đạt từ loại Khá trở lên, ưu tiên sinh viên có kết quả cao nhất."
+  },
+  {
+    "question": "Thời hạn nộp học phí mỗi học kỳ là bao lâu?",
+    "expected_answer": "Sinh viên phải hoàn tất nộp học phí trong vòng 4 tuần kể từ ngày khai giảng học kỳ. Quá hạn sẽ bị khóa tài khoản đăng ký học phần.",
+    "expected_context": "Hạn nộp học phí học kỳ là 4 tuần đầu tiên của học kỳ. Sinh viên không nộp đúng hạn có thể bị đình chỉ học hoặc không được đăng ký học phần kỳ tiếp theo."
+  },
+  {
+    "question": "Sinh viên nghỉ học tạm thời có được hoàn trả học phí không?",
+    "expected_answer": "Sinh viên nghỉ học tạm thời (bảo lưu) theo quy định được hoàn trả một phần học phí tùy theo thời điểm bảo lưu trong học kỳ.",
+    "expected_context": "Sinh viên bảo lưu kết quả học tập được hoàn trả học phí theo tỷ lệ phần trăm tùy thuộc vào thời gian đã học trong học kỳ theo quy định nhà trường."
+  },
+  {
+    "question": "Mức học phí năm học 2024-2025 tăng bao nhiêu so với năm trước?",
+    "expected_answer": "Học phí năm học 2024-2025 tăng theo lộ trình quy định, cụ thể mức tăng phụ thuộc vào từng ngành đào tạo và quy định của từng cơ sở giáo dục đại học.",
+    "expected_context": "Mức học phí được điều chỉnh hàng năm theo Nghị định của Chính phủ về cơ chế tự chủ tài chính của các cơ sở giáo dục đại học."
+  },
+  {
+    "question": "Sinh viên hệ liên thông có phải đóng học phí như sinh viên chính quy không?",
+    "expected_answer": "Sinh viên hệ liên thông thường có mức học phí khác so với sinh viên chính quy, được quy định riêng và thường cao hơn do cơ chế tự chủ tài chính của nhà trường.",
+    "expected_context": "Học phí hệ liên thông được tính riêng theo quy định của từng trường và có thể cao hơn mức học phí hệ chính quy do không được nhà nước hỗ trợ học phí."
+  },
+  {
+    "question": "Thủ tục xin học bổng tài trợ từ doanh nghiệp bên ngoài như thế nào?",
+    "expected_answer": "Sinh viên cần nộp đơn đăng ký kèm hồ sơ học tập, thư giới thiệu và bài luận theo yêu cầu của tổ chức tài trợ. Nhà trường thường đóng vai trò trung gian tiếp nhận và chuyển tiếp hồ sơ.",
+    "expected_context": "Để nhận học bổng từ doanh nghiệp, sinh viên cần nộp hồ sơ gồm đơn xin học bổng, bảng điểm, xác nhận sinh viên và bài luận theo yêu cầu của nhà tài trợ qua phòng công tác sinh viên."
+  },
+  {
+    "question": "Sinh viên có thể vay vốn tín dụng học sinh sinh viên ở đâu?",
+    "expected_answer": "Sinh viên có thể vay vốn tín dụng tại Ngân hàng Chính sách Xã hội thông qua UBND phường/xã nơi thường trú của gia đình, không phải tại trường đại học.",
+    "expected_context": "Vay vốn tín dụng học sinh sinh viên được thực hiện tại Ngân hàng Chính sách Xã hội chi nhánh địa phương, hồ sơ nộp qua Tổ tiết kiệm và vay vốn tại UBND xã/phường nơi gia đình cư trú."
+  },
+  {
+    "question": "Điều kiện để sinh viên được nhận học bổng toàn phần là gì?",
+    "expected_answer": "Để nhận học bổng toàn phần, sinh viên thường cần đạt GPA tối thiểu 3.6/4.0, không có môn học lại, điểm rèn luyện xuất sắc, và không vi phạm quy chế nhà trường.",
+    "expected_context": "Học bổng toàn phần dành cho sinh viên có kết quả học tập xuất sắc với điểm GPA từ 3.6 trở lên, điểm rèn luyện xuất sắc, không có học phần nợ và không vi phạm kỷ luật."
+  },
+  {
+    "question": "Sinh viên bị đình chỉ học do nợ học phí thì cần làm gì để tiếp tục học?",
+    "expected_answer": "Sinh viên cần nộp đủ học phí còn thiếu và làm đơn xin tiếp tục học gửi phòng đào tạo để được khôi phục quyền học tập trong vòng thời gian quy định.",
+    "expected_context": "Sinh viên bị đình chỉ do nợ học phí cần hoàn tất nghĩa vụ tài chính và nộp đơn xin khôi phục quyền học tập tại phòng đào tạo, được xét trong vòng 5–7 ngày làm việc."
+  },
+  {
+    "question": "Học bổng ngoại giao và học bổng Chính phủ dành cho đối tượng nào?",
+    "expected_answer": "Học bổng ngoại giao và học bổng Chính phủ thường dành cho sinh viên xuất sắc theo diện trao đổi quốc tế, sinh viên đoạt giải quốc gia/quốc tế, hoặc sinh viên thuộc diện ưu tiên đặc biệt do Chính phủ quy định.",
+    "expected_context": "Học bổng Chính phủ và học bổng ngoại giao được xét cho sinh viên có thành tích học tập và nghiên cứu xuất sắc, tham gia chương trình trao đổi sinh viên quốc tế hoặc theo diện ký kết hợp tác giữa hai Chính phủ."
+  },
+  {
+    "question": "Chi phí ký túc xá có được tính vào học phí không?",
+    "expected_answer": "Chi phí ký túc xá là khoản thu riêng biệt, không tính vào học phí. Sinh viên ở ký túc xá đóng phí lưu trú theo tháng hoặc học kỳ theo quy định của ban quản lý ký túc xá.",
+    "expected_context": "Phí ký túc xá được thu riêng, không gộp vào học phí. Sinh viên đăng ký ở nội trú đóng tiền phòng theo tháng hoặc kỳ học theo bảng giá của ban quản lý ký túc xá."
+  },
+  {
+    "question": "Sinh viên nhận học bổng có cần hoàn trả nếu bị đình chỉ học không?",
+    "expected_answer": "Tùy theo loại học bổng: học bổng khuyến khích học tập thường không phải hoàn trả, nhưng học bổng ràng buộc hợp đồng (như học bổng doanh nghiệp) có thể yêu cầu hoàn trả nếu sinh viên vi phạm cam kết.",
+    "expected_context": "Học bổng khuyến khích học tập không yêu cầu hoàn trả khi sinh viên bị đình chỉ. Tuy nhiên, học bổng có ký hợp đồng với doanh nghiệp hoặc tổ chức tài trợ thường có điều khoản hoàn trả nếu vi phạm cam kết."
+  }
+]
