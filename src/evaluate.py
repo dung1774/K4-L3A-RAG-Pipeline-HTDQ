@@ -111,6 +111,7 @@ def _evaluate_config(golden: list[dict], *, use_reranking: bool, label: str) -> 
     """Chạy RAGAS evaluation cho một config và trả về dict metric."""
     from datasets import Dataset
     from ragas import evaluate
+
     from ragas.metrics import (
         answer_relevancy,
         context_precision,
@@ -118,13 +119,46 @@ def _evaluate_config(golden: list[dict], *, use_reranking: bool, label: str) -> 
         faithfulness,
     )
 
+    from ragas.llms import LangchainLLMWrapper
+    from ragas.embeddings import LangchainEmbeddingsWrapper
+
+    from langchain_openai import (
+        ChatOpenAI,
+        OpenAIEmbeddings,
+    )
+
     logger.info("=== Evaluating Config: %s ===", label)
     data = _build_ragas_dataset(golden, use_reranking=use_reranking)
     dataset = Dataset.from_dict(data)
+    evaluator_llm = LangchainLLMWrapper(
+        ChatOpenAI(
+            model=os.getenv(
+                "EVALUATOR_MODEL",
+                "gpt-4o-mini",
+            ),
+            temperature=0,
+        )
+    )
+
+    evaluator_embeddings = LangchainEmbeddingsWrapper(
+        OpenAIEmbeddings(
+            model=os.getenv(
+                "EVALUATOR_EMBEDDING_MODEL",
+                "text-embedding-3-small",
+            )
+        )
+    )
 
     result = evaluate(
-        dataset,
-        metrics=[faithfulness, answer_relevancy, context_recall, context_precision],
+        dataset=dataset,
+        metrics=[
+            faithfulness,
+            answer_relevancy,
+            context_recall,
+            context_precision,
+        ],
+        llm=evaluator_llm,
+        embeddings=evaluator_embeddings,
     )
 
     scores = result.to_pandas().mean(numeric_only=True).to_dict()

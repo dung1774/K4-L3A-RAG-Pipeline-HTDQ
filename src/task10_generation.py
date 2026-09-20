@@ -186,9 +186,9 @@ def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
     if not chunks:
         return _safe_refusal_result()
 
-    if not _has_sufficient_evidence(chunks):
-        logger.info("Không đủ evidence cho query=%r (score dưới ngưỡng).", query)
-        return _safe_refusal_result()
+    # if not _has_sufficient_evidence(chunks):
+    #     logger.info("Không đủ evidence cho query=%r (score dưới ngưỡng).", query)
+    #     return _safe_refusal_result()
 
     reordered = reorder_for_llm(chunks)
     context = format_context(reordered)
